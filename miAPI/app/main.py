@@ -3,7 +3,7 @@ from fastapi import FastAPI,status,HTTPException,Depends
 from typing import Optional
 import asyncio
 from pydantic import BaseModel, Field   #Agregar BaseModel pydantic
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import HTTPBasic, HTTPBasicCredentials #agregamos para seguridad
 import secrets
 
 #2. Inicialización APP
