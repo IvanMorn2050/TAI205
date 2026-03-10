@@ -21,15 +21,16 @@ habitaciones = [
     ]
 
 reservas=[
-    {"id":1, "nombre": "Ivan Moreno", "estado_reserva": "Pendiente"},
-    {"id":2, "nombre": "Katherine Moreno", "estado_reserva": "Confirmado"},
+    {"id":1, "nombre": "Ivan Moreno", "fecha_entrada":9-3-2026, "fecha_salida":15-3-2026, "tipo_habitacion": "Doble", "estancia":8, "estado_reserva": "Pendiente"},
+    {"id":1, "nombre": "Katherine Moreno", "fecha_entrada":10-3-2026, "fecha_salida":14-3-2026, "tipo_habitacion": "Suite", "estancia":8, "estado_reserva": "Confirmado"},
 ]
 class crear_reserva(BaseModel):
-    nombre: str = Field(..., min_length=5, max_length=50, example="Ivan Moreno")
-    fecha_entrada: datetime = Field(...,)
-    fecha_salida: datetime = Field(...,)
-    tipo_habitacion: str = Field(..., min_length=5, max_length=50, example ="Sencilla, Doble, Suite",)
-    estancia: int = Field(..., gt=7, example="7")
+    nombre: str = Field(..., min_length=5, max_length=50)
+    fecha_entrada: datetime = Field(...,gt=9-3-2026)   
+    fecha_salida: datetime = Field(...,gt=16-3-2026)
+    tipo_habitacion: str = Field(..., min_length=5, max_length=50)
+    estancia: int = Field(..., gt=7)
+    estado_reserva: str= Field(..., pattern="^(Disponible|Ocupado)$")
 
 seguridad = HTTPBasic()
 
@@ -45,7 +46,7 @@ def verificar_peticion(credenciales:HTTPBasicCredentials=Depends(seguridad)):
     return credenciales.username
 
 @app.post("/v1/reserva/", tags=["Reservas"])
-async def crea_reserva(reserva:crear_reserva):
+async def crea_reserva(reserva:crear_reserva,userAuth:str=Depends(verificar_peticion)):
     for r in reservas: 
         if r[{"id"}] == reserva.id:
             raise HTTPException(
@@ -59,7 +60,7 @@ async def crea_reserva(reserva:crear_reserva):
         "reserva":reserva
     }
 
-@app.get("/v1/reserva")
+@app.get("/v1/reserva/",tags=["Reservas"])
 async def listar_reservas():
     disponibles = [
         reserva for reserva in reservas
@@ -70,7 +71,7 @@ async def listar_reservas():
         "data":disponibles
     }
 
-@app.get("/v1/reserva/{id}")
+@app.get("/v1/reserva/{id}",tags=["Reservas"])
 async def buscar_reserva (id:int):
     resultado = [
         reserva for reserva in reservas
@@ -81,9 +82,32 @@ async def buscar_reserva (id:int):
         "data": resultado
     }
 
-@app.put("/v1/reserva/confirmar/{id}")
+@app.put("/v1/reserva/confirmar/{id}",tags=["Reservas"])
 async def confirmar_reserva(id_int):
     for r, reserva in enumerate(reservas):
         if reserva ["id"] == id:
             for reserva in reserva:
-                
+                if reserva["id"] == reserva ["reserva_id"]:
+                    reserva ["estado"] = "Confirmado"
+                    break 
+            del reservas[r]
+            return{
+                "mensaje": "Reserva confirmada correctamente",
+                "status":200
+            }
+    raise HTTPException(
+        status_code=409,
+        detail="La reserva no existe"
+    )
+
+@app.delete("/v1/reserva/cancelar/{id}",tags=["Reservas"])
+async def cancelar_reserva(id:int, userAuth:str=Depends(verificar_peticion)):
+    for r, reserva in enumerate(reservas):
+        if reserva["id"] == id:
+            reserva_cancelada = reservas.pop(r)
+
+            return {
+                "mensaje":"Reserva cancelada",
+                "status": 200,
+                "usuario": reserva_cancelada
+            }
