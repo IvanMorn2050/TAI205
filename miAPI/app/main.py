@@ -22,7 +22,7 @@ usuarios=[
     {"id":1,"nombre":"Diego","edad":38},
     {"id":2,"nombre":"Dafne","edad":20},
     {"id":3,"nombre":"Ana","edad":20}
-]
+]   
 
 #Modelo de validación pydantic   ---creamos el modelo
 class crear_usuario(BaseModel):
@@ -141,4 +141,4 @@ async def eliminar_usuario(id: int, userAuth:str=Depends(verificar_peticion)):
     raise HTTPException(
         status_code=404,
         detail="Usuario no encontrado"
-    )
+    )        
